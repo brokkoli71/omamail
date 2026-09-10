@@ -55,6 +55,7 @@ QML_FILES := Service.qml BarWidget.qml App.qml \
 	agent/AgentRunner.qml agent/AgentContext.qml \
 	components/AccountRemovalDialog.qml \
 	components/BackBar.qml \
+	components/MouseBack.qml \
 	components/SettingsPage.qml \
 	components/SettingsSidebar.qml \
 	components/CalendarSettings.qml \

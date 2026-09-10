@@ -548,6 +548,36 @@ Item {
       compare(fakeShell.hidden.length, 1)
     }
 
+    // The mouse's back button is another way to pop the history, and the only
+    // one with a thumb already on it. It takes the step the on-screen Back
+    // takes, so a message opened from the list is left the same way.
+    function test_the_mouse_back_button_leaves_the_message() {
+      var area = named(app, "mouseBack")
+      verify(area, "the window carries a back-button area")
+
+      app.openMessage("message-1")
+      compare(kinds(), "list,reader")
+
+      mouseClick(area, 40, 40, Qt.BackButton)
+      compare(kinds(), "list", "the mouse's back button leaves the message")
+      compare(fakeShell.hidden.length, 0, "and does not close the window doing it")
+    }
+
+    // `back()` on an empty history closes the window, which is right for the
+    // Back that is only drawn when there is somewhere to go and wrong for a
+    // button that is under the thumb whatever the window is showing. Without
+    // the depth guard the second of two presses in the reader shuts the
+    // mailbox.
+    function test_the_mouse_back_button_stops_at_the_root() {
+      var area = named(app, "mouseBack")
+      verify(area, "the window carries a back-button area")
+      compare(kinds(), "list", "the root is where this starts")
+
+      mouseClick(area, 40, 40, Qt.BackButton)
+      compare(kinds(), "list", "the root is not popped")
+      compare(fakeShell.hidden.length, 0, "and the window is not closed")
+    }
+
     function test_first_run_stacks_follow_what_the_service_knows() {
       mailService.anyAccountReady = false
       mailService.hasSavedAccounts = false
