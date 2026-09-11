@@ -1639,9 +1639,10 @@ Item {
       focus: true
 
       MouseBack {
-        anchors.fill: parent
-        canGoBack: Nav.depth(root.nav) > 1
-        onActivated: root.back()
+        canGoBack: Nav.depth(root.nav) > 1 || root.assistantOpen
+          || root.selectionActive || searchBar.fieldFocused
+          || (!!root.service && root.service.searchQuery !== "")
+        onActivated: root.goBack()
       }
 
       // Where the window is, and the only thing that says what a key means.

@@ -1,38 +1,48 @@
 import QtQuick
 
-// The mouse's own back button, where a thumb already expects it.
+// The mouse's back button, carrying the same intent Escape carries.
 //
-// It reports rather than decides: `canGoBack` is the window's answer to
-// whether there is anywhere to go, and the step itself is the caller's. The
-// step wanted here is `back()` — the history — and not Escape's `goBack()`.
-// Escape's job is everything a person could want out of: a query being typed,
-// a selection, an open dock. A thumb reaching for the previous page has asked
-// for the page, and a back button that also emptied the search field would be
-// answering a question nobody put to it.
+// It reports; the window decides. `canGoBack` is the application's answer to
+// whether there is a step to take, and the step itself is the caller's — this
+// draws nothing and knows nothing about where the window has been. That is
+// the same shape `KeyRouter` has, and for the same reason: an action
+// describes intent, not the device that raised it, so the mouse and the
+// keyboard must not grow two implementations of going back.
 //
-// The guard is not politeness. `back()` on an empty history closes the window,
-// which is right for a Back that is only drawn when there is somewhere to go
-// and wrong for a button sitting under the thumb whatever the window shows —
-// unguarded, the second of two presses in the reader shuts the mailbox. A
-// browser's back at the first page does nothing, and neither does this.
+// One defect is known and unfixed, and `tst_app_navigation.qml` carries the
+// failing test for it. A non-modal `QQC.Popup` with `CloseOnPressOutside` —
+// the app menu, a message menu, the account switcher, and five more — is
+// dismissed by this press, and Qt's overlay then delivers the same press to
+// what lies beneath, so the menu closes and the page under it goes back
+// together: one gesture spent twice. Reading the overlay here does not help,
+// and that was measured rather than assumed — Qt empties the overlay before
+// running this handler, so a guard on `Overlay.overlay.children` sees zero
+// open popups at exactly the moment one is closing. Suppressing it needs
+// state the popup owns, and that is the application's to give.
 //
 // Only `Qt.BackButton` is accepted, so every other button reaches whatever is
-// under the pointer exactly as before. That is also why this may lie under the
-// whole window: nothing above it accepts this button, so the press arrives
-// here having passed everything else.
+// under the pointer exactly as before: left clicks on rows and chrome, a
+// splitter drag, text selection in the reader, and the wheel handler in
+// `WheelScroller` are all untouched by this lying beneath them.
 MouseArea {
   id: root
 
-  objectName: "mouseBack"
+  objectName: "mouse-back"
 
-  property bool canGoBack: false
+  // Whatever it is given, in full. The button is pressed wherever the pointer
+  // happens to be resting, so there is no smaller area that would be right.
+  anchors.fill: parent
+
+  // Required rather than defaulted: a caller that forgets it would otherwise
+  // get a button that is silently dead, which is the hardest kind to notice.
+  required property bool canGoBack
 
   signal activated()
 
   acceptedButtons: Qt.BackButton
 
   onPressed: function(mouse) {
-    if (root.canGoBack) root.activated()
     mouse.accepted = true
+    if (root.canGoBack) root.activated()
   }
 }
