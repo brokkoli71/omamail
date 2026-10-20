@@ -10,16 +10,13 @@ import QtQuick.Controls
 // describes intent, not the device that raised it, so the mouse and the
 // keyboard must not grow two implementations of going back.
 //
-// One defect is known and unfixed, and `tst_app_navigation.qml` carries the
-// failing test for it. A non-modal `QQC.Popup` with `CloseOnPressOutside` —
-// the app menu, a message menu, the account switcher, and five more — is
-// dismissed by this press, and Qt's overlay then delivers the same press to
-// what lies beneath, so the menu closes and the page under it goes back
-// together: one gesture spent twice. Reading the overlay here does not help,
-// and that was measured rather than assumed — Qt empties the overlay before
-// running this handler, so a guard on `Overlay.overlay.children` sees zero
-// open popups at exactly the moment one is closing. Suppressing it needs
-// state the popup owns, and that is the application's to give.
+// A press that dismisses a menu does not also go back. A non-modal
+// `QQC.Popup` with `CloseOnPressOutside` — the app menu, a message menu, the
+// account switcher, and five more — is closed by this press, and Qt's overlay
+// then delivers the same press to what lies beneath, so without a guard the
+// menu would close and the page under it would go back together: one gesture
+// spent twice. `dismissedAPopup` below is that guard, and
+// `tst_app_navigation.qml` covers it.
 //
 // Only `Qt.BackButton` is accepted, so every other button reaches whatever is
 // under the pointer exactly as before: left clicks on rows and chrome, a
